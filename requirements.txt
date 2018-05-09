@@ -1,1 +1,8 @@
+Cython
+pillow
+lxml
+jupyter
+matplotlib
+numpy
+csv
 

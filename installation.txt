@@ -1,0 +1,20 @@
+1. follow steps on website to install the Object detection API: https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/installation.md
+
+2. in tensorflow/models/research/object_detection/protos/ssd.proto, remove line 87
+
+3. watch out; if using IDE, remember to add to PYTHONPATH the following: 
+PYTHONPATH=$PYTHONPATH:<path-to-tensorflow/models/research>:<path-to-tensorflow/models/research/slim>
+
+4. added try/except in create_coco_tf_record.py to be able to skip images not in datafile.:
+      try:
+          if idx % 100 == 0:
+            tf.logging.info('On image %d of %d', idx, len(images))
+          annotations_list = annotations_index[image['id']]
+          _, tf_example, num_annotations_skipped = create_tf_example(
+              image, annotations_list, image_dir, category_index, include_masks)
+          total_num_annotations_skipped += num_annotations_skipped
+          writer.write(tf_example.SerializeToString())
+      except tf.errors.NotFoundError:
+          tf.logging.warning(' Image {} not found in data file.' .format(idx))
+
+note: might implement another solution to generate dataset: see script here, and iterate over labelfile & img.: https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/using_your_own_dataset.md 

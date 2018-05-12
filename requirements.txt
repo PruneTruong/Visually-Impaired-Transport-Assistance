@@ -4,5 +4,4 @@ lxml
 jupyter
 matplotlib
 numpy
-csv
 

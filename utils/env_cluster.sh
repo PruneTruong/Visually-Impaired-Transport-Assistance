@@ -1,7 +1,7 @@
 env_dir=./cluster_env
 python_version="3.6.1"
 
-module load python_gpu/$python_version cuda/9.0.176 cudnn/7.0
+module load python_gpu/$python_version cuda/8.0.61 cudnn/7.0
 
 if [ ! -d "$env_dir" ]; then
     python -m pip install --user virtualenv

@@ -1,0 +1,10 @@
+CLUSTER CHEATSHEET
+
+Connect: ssh user@login.leonhard.ethz.ch
+
+transfer files: scp file user@host: OR scp -r directory user@host:
+
+Run job: 
+	interactive: bsub -I command
+	other: bsub xxxxxxxxxxxxx
+

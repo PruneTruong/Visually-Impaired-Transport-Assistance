@@ -18,3 +18,9 @@ PYTHONPATH=$PYTHONPATH:<path-to-tensorflow/models/research>:<path-to-tensorflow/
           tf.logging.warning(' Image {} not found in data file.' .format(idx))
 
 note: might implement another solution to generate dataset: see script here, and iterate over labelfile & img.: https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/using_your_own_dataset.md 
+
+CLUSTER
+1/ installed pip
+2/ installed virtualenv 
+3/ from local computer: scp -r directory user@host
+

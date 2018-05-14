@@ -3,7 +3,8 @@
 ###############################################################################
 1. Dataset: merging + downloading.				12th of may
 2. OCR
-3. Try config server. 						12th of may
+3. Try config server. 	DONE					12th of may
+- add self generation of dataset from Prune's script in pipeline
 
 
 

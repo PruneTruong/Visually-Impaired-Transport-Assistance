@@ -21,6 +21,26 @@ note: might implement another solution to generate dataset: see script here, and
 
 CLUSTER
 1/ installed pip
-2/ installed virtualenv 
-3/ from local computer: scp -r directory user@host
+- from local computer: scp -r Visually-impaired... user@host
+- delete folder from computer env
+- launched: source utils/env_cluster.sh to create virtual env
+- activate virtual env: source env/bin/activate
+- module load python_gpu/3.6.4 protobuf
+- make makefile install_gpu (note: might need to remove --user (?))
+- cd env/lib/python/site-packages/tensorflow, git clone https://github.com/tensorflow/models.git to have the object_detection API
+- go to models/research/object_detection, and apply patch for dataset creation: git apply <path to dataset_coco_creation.patch>
+- go to research and do: protoc object_detection/protos/*.proto --python_out=.
+- export dependencies / add into .bashrc: export PYTHONPATH=$PYTHONPATH:<path-to-tensorflow/models/research>:<path-to-tensorflow/models/research/slim>
+note: also added "$RESEARCH" variable for ease.
+- go to Vis...: launch batch job with command: XXX
+
+2/ Tensorboard:
+- either log off, or before creating ssh connection do:
+ssh -L port-machine:ip:port-remote user@host. eg. ssh -L 16006:127.0.0.1:6008 lna@login.leonhard.ethz.ch
+- module load python_cpu
+- `tensorboard --logdir=xxxx, --port=port-remote`
+
+
+LOG:
+note: modified eval.proto. see if create new patch or not
 

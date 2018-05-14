@@ -21,3 +21,4 @@ def dataset2TFRecord(annotations_file, image_dir, output_dir,
 dataset2TFRecord(annotations_file, image_dir, output_dir, 'val')
 
 
+def create_custom_dataset(dataset_config, data_dir, output_dir, output)

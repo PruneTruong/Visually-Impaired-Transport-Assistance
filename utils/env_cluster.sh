@@ -1,5 +1,5 @@
 env_dir=./cluster_env
-python_version="3.6.1"
+python_version="3.6.4"
 
 module load python_gpu/$python_version cuda/9.0.176 cudnn/7.0
 

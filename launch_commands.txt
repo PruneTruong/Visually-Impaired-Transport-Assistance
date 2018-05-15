@@ -1,0 +1,20 @@
+launch commands:
+1. EVAL MODE
+JOB LOCAL:
+python /home/nathan/Visually-Impaired-Transport-Assistance/blind_env/lib/python3.6/site-packages/tensorflow/models/research/object_detection/eval.py --logtosderr --pipeline_config_path=/home/nathan/Visually-Impaired-Transport-Assistance/transport_recognition/visual_ROI_detector/models/faster_rcnn_resnet101_coco_2018_01_28/pipeline.config --checkpoint_dir=/home/nathan/Visually-Impaired-Transport-Assistance/transport_recognition/visual_ROI_detector/models/faster_rcnn_resnet101_coco_2018_01_28 --eval_dir=/home/nathan/Visually-Impaired-Transport-Assistance/transport_recognition/visual_ROI_detector/models/faster_rcnn_resnet101_coco_2018_01_28/eval/expXXXX
+
+
+JOB CLUSTER:
+
+
+2. TRAIN MODE
+
+
+
+
+3. TENSORBOARD
+TENSORBOARD LOCAL:
+tensorboard --logdir=$MODELS/faster_rcnn_resnet101_coco_2018_01_28
+
+TENSORBOARD CLUSTER:
+module load python_cpu; 

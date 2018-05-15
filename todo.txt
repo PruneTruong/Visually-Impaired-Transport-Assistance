@@ -5,6 +5,7 @@
 2. OCR
 3. Try config server. 	DONE					12th of may
 - add self generation of dataset from Prune's script in pipeline
+- create patch for eval.proto
 
 
 

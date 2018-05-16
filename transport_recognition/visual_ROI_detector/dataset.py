@@ -4,14 +4,6 @@ import os
 import csv
 from object_detection.dataset_tools.create_coco_tf_record import _create_tf_record_from_coco_annotations
 from object_detection.utils import dataset_util
-from PIL import Image
-
-
-
-annotations_file = '/home/nathan/Visually-Impaired-Transport-Assistance/data/' \
-                    'coco/annotations/instances_val2017.json'
-image_dir = '/home/nathan/Visually-Impaired-Transport-Assistance/data/coco/images/val'
-output_dir = '/home/nathan/Visually-Impaired-Transport-Assistance/data/coco/tfrecord'
 
 sample_config = {
     'img_dir': '/home/nathan/Visually-Impaired-Transport-Assistance/data/coco/images/dataset_val',
@@ -75,31 +67,16 @@ def create_1_tf_record(img_bits, annotation):
         'image/object/class/label': dataset_util.int64_list_feature(classes),
     }))
     return tf_example
-def retrieve_annotations(annotations_files, config):
-
-def main(config):
-    required = ['img_dir', 'output_dir', 'output_file_name', 'annotations_dir']
-    for r in required:
-        assert r in config
-    output_path = config['output_dir'] + '/' + config['output_file_name'] + '.record'
-
-    if not os.path.exists(output_path):
-        if not tf.gfile.IsDirectory(config['output_dir']):
-            tf.gfile.MakeDirs(config['output_dir'])
-        with open(output_path, 'w'): pass
-
-    writer = tf.python_io.TFRecordWriter(output_path)
-
+def retrieve_annotations(config):
+    '''Retrieves annotations from (list of) csv files and concatenates
+    the annotations corresponding to one image into the same dict.
+    Returns a list of dicts, where each dict corresponds to all annotations for 1 image'''
     files_to_include = config.get('file_list_to_include', None)
-
     annotation_files = find_csv_filenames(config['annotations_dir'])
     annotations = []
     nb_ann = 0
-    nb_img_tf_record = 0
     tf.logging.debug('Annotations files found in directory: {}' .format(annotation_files))
 
-    #retrieve annotations and concatenate annotations for each image in a list of dicts
-    annotations = retrieve_annotations(annotation_files, config)
     for file in annotation_files:
         if files_to_include is None or file in files_to_include:
             tf.logging.info('Reading file {} ...'.format(file))
@@ -124,8 +101,10 @@ def main(config):
                     nb_ann = nb_ann + 1
 
     tf.logging.info(' Found {} images with a total of {} annotations' .format(len(annotations), nb_ann))
+    return annotations
 
-    # create tf record for each image
+def create_tf_record(annotations, writer, config):
+    nb_img_tf_record = 0
     for i in range(len(annotations)):
         # retrieve image from first element of list 'img_name'
         # note: all elements of the list are the same for that field
@@ -146,6 +125,26 @@ def main(config):
 
     writer.close()
     tf.logging.info(' Successfully created annotated tf_record dataset with {} images.' .format(nb_img_tf_record))
+
+
+def main(config):
+    required = ['img_dir', 'output_dir', 'output_file_name', 'annotations_dir']
+    for r in required:
+        assert r in config
+    output_path = config['output_dir'] + '/' + config['output_file_name'] + '.record'
+
+    if not os.path.exists(output_path):
+        if not tf.gfile.IsDirectory(config['output_dir']):
+            tf.gfile.MakeDirs(config['output_dir'])
+        with open(output_path, 'w'): pass
+
+    writer = tf.python_io.TFRecordWriter(output_path)
+
+    # retrieve annotations and concatenate annotations for each image in a list of dicts
+    annotations = retrieve_annotations(config)
+
+    # create tf_record from annotations
+    create_tf_record(annotations, writer, config)
 
 
 main(sample_config)

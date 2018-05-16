@@ -7,6 +7,7 @@
 - add self generation of dataset from Prune's script in pipeline
 - create patch for eval.proto
 - decide where put config. quite not clear now (in model or in config directory).
+- move sample config to "real config file" with parser
 PRUNE:
 - have a header in each file like: img_name;category;category_idx;height;width;x_max;x_min;y_max;y_min
 

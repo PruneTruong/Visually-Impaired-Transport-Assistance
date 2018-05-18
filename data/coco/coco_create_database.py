@@ -10,18 +10,39 @@ Created on Mon May  7 17:06:09 2018
 prerequisite: download the json file "annotations", put the folder "annotations" in the dataDir. 
 '''
 #requirements: list
-from pycocotools.coco import COCO
+
 import numpy as np
 import os
 import csv
 from glob import glob
-#import argparse
+import argparse
+import sys
+from pycocotools import coco
+#pip install pycocotools
+    
 
-'''in the dataDir directory is located the "annotations" file containing json file/info on images'''
-dataDir='/Users/prunetruong/Desktop/Blind_project/coco_image'
-dataType='val2017'
-annFile='{}/annotations/instances_{}.json'.format(dataDir,dataType)
-coco=COCO(annFile)
+
+def get_parameters(text):
+    '''from the Text file containing the informations on the categories we want to 
+    download in the database, creates a list information + a vector classes_to_download
+    input: path to the text_file'''
+    
+    label=[]
+    label_id=[]
+    number=[]
+    cats = coco.loadCats(coco.getCatIds())
+    nms=[cat['name'] for cat in cats]
+    print(nms)
+    for x in open('{}'.format(text)).readlines():
+        row=x.split(",")
+        label.append(row[0])
+        if not row[0] in nms: 
+            sys.exit('warning: {} is not a valid category name. Please change it. Stop execution'.format(row[0]))
+        label_id.append(row[1])
+        number.append(row[2])
+
+    return(label, label_id, number)
+
 
 def display_max_number(category):
     '''display the number of images contained in the coco database for a category. 
@@ -31,7 +52,7 @@ def display_max_number(category):
     nbr_img=int(nbr_img)
     return nbr_img
 
-def create_categorie(category, directory, label, label_id, number):
+def create_categorie(category,label, label_id, number, path, step):
     '''input: category= name of the category of object to download and put in the database
               directory= where to create the database
               This function creates a folder named like the category (if doesn't already exist)
@@ -41,28 +62,23 @@ def create_categorie(category, directory, label, label_id, number):
               '''
     print('creating category {}...'.format(category))
     max_number=display_max_number(category)
-    if (number>max_number):
+    if (int(number)>max_number):
         print('attention, the number you chose for the category {} is above the limit allowed. The default number is {}'.format(category,max_number) )
         number=max_number
-   # if number=: 
-      #  number=max_number
-   # except 
+
     catIds = coco.getCatIds(catNms=[category]);
     imgIds = coco.getImgIds(catIds=catIds );
     todownload=[]
-
-    path='{}/{}'.format(directory,category)
-    if not os.path.exists(path):
-        os.makedirs(path)
         
-    with open('{}/{}.csv'.format(directory, category), 'w') as csvfile:
+    with open('{}/{}.csv'.format(path, category), 'w') as csvfile:
         writer = csv.writer(csvfile, delimiter=';',
                                 quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        for ids in imgIds[0:number]:
+        csvfile.write('img_name;category;category_idx;height;width;x_min;y_min;x_max;y_max  \n')
+        
+        for ids in imgIds[0:int(number)]:
             image=coco.loadImgs(ids)[0]
             
             file_name=image['file_name'] #contains .jpg
-            print(file_name)
             height=image['height']
             width=image['width']
             annIds = coco.getAnnIds(ids, catIds=catIds)
@@ -71,8 +87,13 @@ def create_categorie(category, directory, label, label_id, number):
                 print('for category {} need to download image {}'.format(category,file_name))
             for i in np.arange(len(annIds)):
                 annotation=coco.loadAnns(annIds[i])[0]
+                #here we convert into relative value, bbox: [x,y,width,height],
                 bbox=annotation['bbox']
-                writer.writerow([file_name.strip('.jpg'), label, label_id, height, width, bbox[0], bbox[1], bbox[2], bbox[3]])
+                xmin=float(bbox[0]/width)
+                ymin=float(bbox[1]/height)
+                xmax=float((bbox[2]+bbox[0])/width)
+                ymax=float((bbox[1]+bbox[3])/height)
+                writer.writerow([file_name.strip('.jpg'), label, label_id, height, width, xmin, ymin, xmax, ymax])
 
     if not (len(todownload)==0):
         coco.download('{}'.format(path), todownload)
@@ -88,11 +109,12 @@ def merge_csv(directory, name_merged_file):
     if os.path.exists('{}.csv'.format(name_merged_file)):
         os.remove('{}.csv'.format(name_merged_file))
     with open('{}.csv'.format(name_merged_file), 'a') as singleFile:
+        singleFile.write('img_name;category;category_idx;height;width;x_min;y_min;x_max;y_max  \n')
         for csvs in glob('*.csv'):
             if csvs == '{}.csv'.format(name_merged_file):
                 pass
             else:
-                for line in open(csvs, 'r'):
+                for line in open(csvs, 'r').readlines()[1:]:
                     singleFile.write(line)
                     i+=1
                 print('end of document {} '.format(csvs))
@@ -123,20 +145,59 @@ def number_image_cat(categories, directory):
 he wants to download, the label and label_id corresponding to this category. Also, numbers corresponds to 
 the number of images to download for the corresponding category. If this number is higher than the 
 maximum number of images in coco_database, this maximum number is taken as default. 
-==> user needs to change directory and categories, labels, label_id, numbers'''
+==> user needs to change directory and categories, labels, label_id, numbers
+
+Also depending on train or val need to change the directory and first line
 
 
-directory='/Users/prunetruong/Desktop/Blind_project/coco_image/dataset_val'
+'''
+parser = argparse.ArgumentParser()
+parser.add_argument('--path_coco_database', dest='path', required=True)
+parser.add_argument('--step_val_train_test', dest='step', required=True)
+parser.add_argument('--path_text_file', dest='fichier_text', required=True)
 
-categories=['bus', 'train', 'bicycle', 'car', 'truck']
-labels= ['bus', 'train', 'transport', 'transport', 'transport']
-label_id=[1, 2, 3, 3, 3]
-numbers=[4000, 4000, 1000, 1000, 1000]
+if __name__ == '__main__':
 
-#is no number is given, the default will be all the images in the database
+    args = parser.parse_args()
+    path= args.path
+    step = args.step
+    fichier_text = args.fichier_text
 
-a=display_max_number(categories)
-for i,j,label_ids, number in zip(categories, labels, label_id, numbers): 
-    create_categorie(i, directory, j, label_ids, number)
-number_image_cat(categories, directory)
-merge_csv(directory, 'label')
+
+    '''in the dataDir directory is located the "annotations" file containing json file/info on images'''
+    dataType='{}2017'.format(step)
+    annFile='{}/annotations/instances_{}.json'.format(path,dataType)
+    coco=coco.COCO(annFile)
+    #COCO is a class from coco
+    
+    #categories=['bus', 'train', 'car', 'truck']
+    #labels= ['bus', 'train', 'car', 'truck']
+    #label_id=[0, 1, 2, 3]
+    #numbers=[4000, 4000, 2000, 1000]
+    
+
+    labels, label_id, numbers=get_parameters('{}'.format(fichier_text))
+    categories=labels
+    #is no number is given, the default will be all the images in the database
+    #a=display_max_number(categories)
+    directory='{}/images/dataset_{}'.format(path, step)
+    for i,j,label_ids, number in zip(categories, labels, label_id, numbers): 
+        create_categorie(i, j, label_ids, number, directory, step)
+        print(number)
+    
+    merge_csv(directory, 'label_{}'.format(step))
+
+
+'''
+to write:
+python coco_create_database.py --path_coco_database 
+'/Users/prunetruong/Desktop/Blind_project/dataset/coco_database/' 
+--step_val_train_test train 
+--path_text_file '/Users/prunetruong/Desktop/Blind_project/dataset/category_classes_coco.txt'
+
+python coco_create_database.py --path_coco_database '/Users/prunetruong/Desktop/Blind_project/dataset/coco_database/' --step_val_train_test train --path_text_file '/Users/prunetruong/Desktop/Blind_project/dataset/category_classes_coco.txt'
+
+'''
+
+
+

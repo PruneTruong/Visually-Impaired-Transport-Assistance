@@ -1,8 +1,0 @@
-Cython
-pillow
-lxml
-jupyter
-matplotlib
-numpy
-pycocotools
-

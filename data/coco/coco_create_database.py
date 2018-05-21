@@ -4,12 +4,19 @@
 Created on Mon May  7 17:06:09 2018
 
 @author: ptruong
-"""
 
-'''create database with images coming from coco database. 
-prerequisite: download the json file "annotations", put the folder "annotations" in the dataDir. 
-'''
-#requirements: list
+create database with images coming from coco database. 
+prerequisite: download the json file "annotations", put the folder "annotations" 
+in the dataDir. 
+
+
+tolaunch
+python coco_create_database.py --path_coco_database 
+'/Users/prunetruong/Desktop/Blind_project/Visually-Impaired-Transport-Assistance/data/coco' 
+--step_val_train_test train 
+--path_text_file '/Users/prunetruong/Desktop/Blind_project/Visually-Impaired-Transport-Assistance/data/coco/category_classes_coco.txt'
+
+"""
 
 import numpy as np
 import os
@@ -18,7 +25,6 @@ from glob import glob
 import argparse
 import sys
 from pycocotools import coco
-#pip install pycocotools
     
 
 
@@ -32,7 +38,6 @@ def get_parameters(text):
     number=[]
     cats = coco.loadCats(coco.getCatIds())
     nms=[cat['name'] for cat in cats]
-    print(nms)
     for x in open('{}'.format(text)).readlines():
         row=x.split(",")
         label.append(row[0])
@@ -55,11 +60,15 @@ def display_max_number(category):
 def create_categorie(category,label, label_id, number, path, step):
     '''input: category= name of the category of object to download and put in the database
               directory= where to create the database
-              This function creates a folder named like the category (if doesn't already exist)
-              containing all images corresponding to this category from coco_image. 
+              This function creates a folder named like the category 
+              (if doesn't already exist) containing all images corresponding 
+              to this category from coco_image. 
               it also creates a csv file containing a list of all images_id, 
-              corresponding label, height, width and bounding box dimensions of the category object.
+              corresponding label, height, width and bounding box dimensions of 
+              the category object.
               '''
+    path_image='{}/images/dataset_{}'.format(path, step)
+    path_annotations='{}/annotations'.format(path)
     print('creating category {}...'.format(category))
     max_number=display_max_number(category)
     if (int(number)>max_number):
@@ -70,10 +79,10 @@ def create_categorie(category,label, label_id, number, path, step):
     imgIds = coco.getImgIds(catIds=catIds );
     todownload=[]
         
-    with open('{}/{}.csv'.format(path, category), 'w') as csvfile:
+    with open('{}/{}_{}.csv'.format(path_annotations, category, step), 'w') as csvfile:
         writer = csv.writer(csvfile, delimiter=';',
                                 quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        csvfile.write('img_name;category;category_idx;height;width;x_min;y_min;x_max;y_max  \n')
+        csvfile.write('img_name;category;category_idx;height;width;x_min;y_min;x_max;y_max\n')
         
         for ids in imgIds[0:int(number)]:
             image=coco.loadImgs(ids)[0]
@@ -82,7 +91,7 @@ def create_categorie(category,label, label_id, number, path, step):
             height=image['height']
             width=image['width']
             annIds = coco.getAnnIds(ids, catIds=catIds)
-            if not os.path.exists('{}/{}'.format(path,file_name)):
+            if not os.path.exists('{}/{}'.format(path_image,file_name)):
                 todownload.append(ids)
                 print('for category {} need to download image {}'.format(category,file_name))
             for i in np.arange(len(annIds)):
@@ -96,11 +105,12 @@ def create_categorie(category,label, label_id, number, path, step):
                 writer.writerow([file_name.strip('.jpg'), label, label_id, height, width, xmin, ymin, xmax, ymax])
 
     if not (len(todownload)==0):
-        coco.download('{}'.format(path), todownload)
+        os.chdir('{}'.format(path_image))
+        coco.download('{}'.format(todownload))
 
     print('category {} : preparation finished'.format(category))
     
-def merge_csv(directory, name_merged_file): 
+def merge_csv(directory, name_merged_file, step): 
     '''merges all csv file contained into directory into one, and prints the number of lines
     in the csv file'''
     print('merging the csv files present in {}....'.format(directory) )
@@ -109,8 +119,8 @@ def merge_csv(directory, name_merged_file):
     if os.path.exists('{}.csv'.format(name_merged_file)):
         os.remove('{}.csv'.format(name_merged_file))
     with open('{}.csv'.format(name_merged_file), 'a') as singleFile:
-        singleFile.write('img_name;category;category_idx;height;width;x_min;y_min;x_max;y_max  \n')
-        for csvs in glob('*.csv'):
+        singleFile.write('img_name;category;category_idx;height;width;x_min;y_min;x_max;y_max\n')
+        for csvs in glob('*_{}.csv'.format(step)):
             if csvs == '{}.csv'.format(name_merged_file):
                 pass
             else:
@@ -180,24 +190,15 @@ if __name__ == '__main__':
     categories=labels
     #is no number is given, the default will be all the images in the database
     #a=display_max_number(categories)
-    directory='{}/images/dataset_{}'.format(path, step)
+    directory_annotations='{}/annotations'.format(path)
     for i,j,label_ids, number in zip(categories, labels, label_id, numbers): 
-        create_categorie(i, j, label_ids, number, directory, step)
+        create_categorie(i, j, label_ids, number, path, step)
         print(number)
     
-    merge_csv(directory, 'label_{}'.format(step))
+    merge_csv(directory_annotations, 'label_{}'.format(step), step)
 
 
-'''
-to write:
-python coco_create_database.py --path_coco_database 
-'/Users/prunetruong/Desktop/Blind_project/dataset/coco_database/' 
---step_val_train_test train 
---path_text_file '/Users/prunetruong/Desktop/Blind_project/dataset/category_classes_coco.txt'
 
-python coco_create_database.py --path_coco_database '/Users/prunetruong/Desktop/Blind_project/dataset/coco_database/' --step_val_train_test train --path_text_file '/Users/prunetruong/Desktop/Blind_project/dataset/category_classes_coco.txt'
-
-'''
 
 
 

@@ -6,8 +6,9 @@
 
 to launch:
 python openV4_create_database.py
---path_V4_database '/Users/prunetruong/Desktop/Blind_project/Visually-Impaired-Transport-Assistance/data/openV4/'
---step_val_train_test train
+--path_openV4_annotation '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/openV4/annotations'
+--path_openV4_images '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/mixed/images'
+--step_val_train_test val
 --path_text_file '/Users/prunetruong/Desktop/Blind_project/Visually-Impaired-Transport-Assistance/data/openV4/category_classes_openV4.txt'
 
 
@@ -163,9 +164,7 @@ def download_images(path_to_download, list_images, number):
     print('end of download')
     
     
-def create_csv(name_csv, path, annotations_bbx, step):
-    directory_annotation='{}/annotations/'.format(path)
-    directory_image='{}/images/dataset_{}'.format(path,step)
+def create_csv(name_csv, directory_annotation, directory_image, annotations_bbx, step):
     
     if os.path.exists('{}/{}.csv'.format(directory_annotation, name_csv)):
         os.remove('{}/{}.csv'.format(directory_annotation, name_csv))
@@ -179,6 +178,7 @@ def create_csv(name_csv, path, annotations_bbx, step):
             if os.path.exists('{}/{}.jpg'.format(directory_image, image_id)):
                 Image_to_describe = Image.open('{}/{}.jpg'.format(directory_image, image_id))
                 width, height = Image_to_describe.size
+                print('{} image has a size of {} height and {} width'.format(image_id, width, height))
                 writer.writerow([image_id, image['label'], image['label_id'], height, width, image['xmin'],image['ymin'],image['xmax'],
                              image['ymax']])
         print('csv file created in {}'.format(directory_annotation))
@@ -186,31 +186,37 @@ def create_csv(name_csv, path, annotations_bbx, step):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--path_V4_database', dest='path', required=True)
+parser.add_argument('--path_openV4_annotation', dest='path_annotation', required=True)
+parser.add_argument('--path_openV4_images', dest='path_images', required=True)
 parser.add_argument('--step_val_train_test', dest='step', required=True)
 parser.add_argument('--path_text_file', dest='fichier_text', required=True)
 
 if __name__ == '__main__':
 
     args = parser.parse_args()
-    path= args.path
+    path_annotation= args.path_annotation
+    path_images=args.path_images
     step = args.step
     fichier_text = args.fichier_text
     
-    bbox_annotation_path='{}/annotations/bbox_annotations/{}/annotations-human-bbox.csv'.format(path, step)
-    images_annotation_path='{}/annotations/images/{}/images.csv'.format(path,step)
-    classes_description_path='{}/annotations/classes/class-descriptions.csv'.format(path)
-    
-    path_to_download='{}/images/dataset_{}'.format(path,step)
+    bbox_annotation_path='{}/bbox_annotations/{}/annotations-human-bbox.csv'.format(path_annotation, step)
+    images_annotation_path='{}/images/{}/images.csv'.format(path_annotation,step)
+    classes_description_path='{}/classes/class-descriptions.csv'.format(path_annotation)
+
+
+    path_to_download='{}/dataset_{}'.format(path_images,step)
     
     categories_information, list_classes=make_json_file(fichier_text, classes_description_path )
     annotations, list_image_ids = format_annotations(bbox_annotation_path, list_classes, categories_information)
-    create_csv('label_{}'.format(step), path, annotations, step)
+    create_csv('label_{}'.format(step), path_annotation, path_to_download, annotations, step)
 
+'''
     list_image_id_to_download=list_image_to_download(path_to_download, list_image_ids)
+    print(list_image_id_to_download)
+
     if list_image_id_to_download: 
         list_images_url=format_image_index(images_annotation_path, list_image_id_to_download)
         download_images(path_to_download, list_images_url, len(list_images_url))
 
 
-        
+'''

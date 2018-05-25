@@ -4,14 +4,14 @@ import os
 import csv
 from object_detection.dataset_tools.create_coco_tf_record import _create_tf_record_from_coco_annotations
 from object_detection.utils import dataset_util
-
+#tfrecord_test used with github program, 14images with our own
+#"/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/coco/tfrecord_test_2/val.record"
 sample_config = {
-    'img_dir': '/home/nathan/Visually-Impaired-Transport-Assistance/data/coco/images/dataset_val',
-    'annotations_dir':'/home/nathan/Visually-Impaired-Transport-Assistance/data/coco/annotations',
-    'output_dir': '/home/nathan/Visually-Impaired-Transport-Assistance/data/coco/tfrecord_beta',
-    'output_file_name': 'eval',
-    'file_list_to_include': ['label.csv']
-
+    'img_dir': '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/mixed/images/dataset_train',
+    'annotations_dir': '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/coco/annotations',
+    'output_dir': '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/coco/tfrecord',
+    'output_file_name': 'train',
+    'file_list_to_include': ['label_train.csv']
     }
 
 def dataset2TFRecord(annotations_file, image_dir, output_dir,
@@ -24,7 +24,7 @@ def dataset2TFRecord(annotations_file, image_dir, output_dir,
                                             output_path,
                                             include_mask)
 
-#dataset2TFRecord(annotations_file, image_dir, output_dir, 'val')
+#dataset2TFRecord(sample_config['annotations_dir'] + '/instances_val2017.json', sample_config['img_dir'], sample_config['output_dir'], 'val')
 
 def find_csv_filenames(path_to_dir, suffix=".csv" ):
     filenames = os.listdir(path_to_dir)
@@ -38,9 +38,11 @@ def create_1_tf_record(img_bits, annotation):
     # note : elements 0 are chosen for values that are the same for all annotations of this image
     height = int(annotation['height'][0])
     width = int(annotation['width'][0])
-    filename = str.encode(annotation['img_name'][0])
-    encoded_image_data = img_bits
     img_format = str.encode(annotation['img_format'])
+    source_id = str.encode(annotation['img_name'][0])
+    #filename=str.encode(annotation['img_name'][0] + "." + img_format)
+    encoded_image_data = img_bits
+
 
     xmins = np.array(annotation['x_min']).astype(np.float)
     xmaxs = np.array(annotation['x_max']).astype(np.float)
@@ -49,12 +51,11 @@ def create_1_tf_record(img_bits, annotation):
 
     classes_text = [str.encode(categ) for categ in annotation['category']]
     classes = list(map(int, annotation['category_idx']))
-
     tf_example = tf.train.Example(features=tf.train.Features(feature={
         'image/height': dataset_util.int64_feature(height),
         'image/width': dataset_util.int64_feature(width),
-        'image/filename': dataset_util.bytes_feature(filename),
-        'image/source_id': dataset_util.bytes_feature(filename),
+        'image/filename': dataset_util.bytes_feature(source_id),
+        'image/source_id': dataset_util.bytes_feature(source_id),
         'image/encoded': dataset_util.bytes_feature(encoded_image_data),
         'image/format': dataset_util.bytes_feature(img_format),
         'image/object/bbox/xmin': dataset_util.float_list_feature(xmins.tolist()),

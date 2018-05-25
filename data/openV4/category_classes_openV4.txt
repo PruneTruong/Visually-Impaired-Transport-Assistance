@@ -1,2 +1,2 @@
-bus,0,
-train,1,
+bus,6,
+train,7,

@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed May 16 21:57:32 2018
-[ filename for filename in filenames if filename.endswith( suffix ) ] short writting of a list
 @author: prunetruong
+
+
+to launch:
+python openV4_create_database.py
+--path_V4_database '/Users/prunetruong/Desktop/Blind_project/Visually-Impaired-Transport-Assistance/data/openV4/'
+--step_val_train_test train
+--path_text_file '/Users/prunetruong/Desktop/Blind_project/Visually-Impaired-Transport-Assistance/data/openV4/category_classes_openV4.txt'
+
 
 # downloads and extracts the openimages bounding box annotations and image path files
 cd /Users/prunetruong/Desktop/Blind_project/dataset/openV4/
@@ -24,24 +30,6 @@ mv 2017_07 data/classes
 rm classes_2017_07.tar.gz
 https://blog.algorithmia.com/deep-dive-into-object-detection-with-open-images-using-tensorflow/
 
-Classes we are interested in: 
-/m/01bjv,Bus
-
-/m/07jdr,Train
-
-/m/07r04,Truck
-
-coordinates of the box, in normalized image coordinates. XMin is in [0,1], 
-where 0 is the leftmost pixel, and 1 is the rightmost pixel in the image. 
-Y coordinates go from the top pixel (0) to the bottom pixel (1).
-
-
-
-to write
---path_coco_database '/Users/prunetruong/Desktop/Blind_project/dataset/openV4/'
---step_val_train_test train
---path_text_file '/Users/prunetruong/Desktop/Blind_project/dataset/category_classes_openV4.txt'
-    
 
 """
 
@@ -128,6 +116,7 @@ def list_image_to_download(path_to_download, ids):
     for name in ids:
         if not os.path.exists('{}/{}.jpg'.format(path_to_download, name)):
             image_to_download.append(name)
+    print(image_to_download)
     return image_to_download
 
 def format_image_index(images_path, ids):
@@ -174,19 +163,25 @@ def download_images(path_to_download, list_images, number):
     print('end of download')
     
     
-def create_csv(name_csv, directory, annotations_bbx):
+def create_csv(name_csv, path, annotations_bbx, step):
+    directory_annotation='{}/annotations/'.format(path)
+    directory_image='{}/images/dataset_{}'.format(path,step)
+    
+    if os.path.exists('{}/{}.csv'.format(directory_annotation, name_csv)):
+        os.remove('{}/{}.csv'.format(directory_annotation, name_csv))
     print('creating a csv file ...')
-    with open('{}/{}.csv'.format(directory, name_csv), 'w') as csvfile:
+    with open('{}/{}.csv'.format(directory_annotation, name_csv), 'w') as csvfile:
         writer = csv.writer(csvfile, delimiter=';',
                                 quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        csvfile.write('img_name;category;category_idx;height;width;x_min;y_min;x_max;y_max  \n')
+        csvfile.write('img_name;category;category_idx;height;width;x_min;y_min;x_max;y_max\n')
         for image in annotations_bbx: 
             image_id=image['id']
-            Image_to_describe = Image.open('{}/{}.jpg'.format(directory, image_id))
-            width, height = Image_to_describe.size
-            writer.writerow([image_id, image['label'], image['label_id'], height, width, image['xmin'],image['ymin'],image['xmax'],
+            if os.path.exists('{}/{}.jpg'.format(directory_image, image_id)):
+                Image_to_describe = Image.open('{}/{}.jpg'.format(directory_image, image_id))
+                width, height = Image_to_describe.size
+                writer.writerow([image_id, image['label'], image['label_id'], height, width, image['xmin'],image['ymin'],image['xmax'],
                              image['ymax']])
-        print('csv file created in {}'.format(directory))
+        print('csv file created in {}'.format(directory_annotation))
     
 
 
@@ -210,8 +205,12 @@ if __name__ == '__main__':
     
     categories_information, list_classes=make_json_file(fichier_text, classes_description_path )
     annotations, list_image_ids = format_annotations(bbox_annotation_path, list_classes, categories_information)
+    create_csv('label_{}'.format(step), path, annotations, step)
+
     list_image_id_to_download=list_image_to_download(path_to_download, list_image_ids)
-    list_images_url=format_image_index(images_annotation_path, list_image_id_to_download)
-    download_images(path_to_download, list_images_url, len(list_images_url))
-    create_csv('label_{}'.format(step), path_to_download, annotations)
+    if list_image_id_to_download: 
+        list_images_url=format_image_index(images_annotation_path, list_image_id_to_download)
+        download_images(path_to_download, list_images_url, len(list_images_url))
+
+
         

@@ -35,7 +35,7 @@ ex: train \
 --path_text_file : the path to the text file containing the informations on the categories we want to download. The content of this text file will be described below. \
 ex: \'92/Users/prunetruong/Desktop/Blind_project/dataset/category_classes_coco.txt'\
 \
-Content of text file: \
+\ul Content of text file: \ulnone \
 In the text file, the user needs to specify the categories he wants to download, followed by the corresponding label_name and id he wants to give. \
 For coco_database, a 4rth argument for each category is the number of images the user wants to download. If this number is too high (not enough pictures on the coco-dataset), the number will be set to the maximum available for this category. \
 Informations for each category must be on one line, all separated by coma (\'ab\'a0,\'a0\'bb). \
@@ -52,5 +52,7 @@ category_classes_openV4.txt:\
 Bus,0,\
 Train,1,\
 \
-\
+On the annotations: \
+we get xmin, ymin, xmax, ymax: coordinates of the box, in normalized image coordinates. XMin is in [0,1], where 0 is the leftmost pixel, and 1 is the rightmost pixel in the image. \
+Y coordinates go from the top pixel (0) to the bottom pixel (1).\
 }

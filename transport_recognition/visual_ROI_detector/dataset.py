@@ -41,14 +41,14 @@ def create_1_tf_record(img_bits, annotation):
     filename = str.encode(annotation['img_name'][0])
     encoded_image_data = img_bits
     img_format = str.encode(annotation['img_format'])
-    
+
     xmins = np.array(annotation['x_min']).astype(np.float)
     xmaxs = np.array(annotation['x_max']).astype(np.float)
     ymins = np.array(annotation['y_min']).astype(np.float)
     ymaxs = np.array(annotation['y_max']).astype(np.float)
 
     classes_text = [str.encode(categ) for categ in annotation['category']]
-    classes = map(int, annotation['category_idx'])
+    classes = list(map(int, annotation['category_idx']))
 
     tf_example = tf.train.Example(features=tf.train.Features(feature={
         'image/height': dataset_util.int64_feature(height),

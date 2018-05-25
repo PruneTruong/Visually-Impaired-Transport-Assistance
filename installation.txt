@@ -21,7 +21,7 @@ note: might implement another solution to generate dataset: see script here, and
 
 CLUSTER
 1/ installed pip
-- from local computer: scp -r Visually-impaired... user@host
+- from local computer: scp -r Visually-impaired... user@host:
 - delete folder from computer env
 - launched: source utils/env_cluster.sh to create virtual env
 - activate virtual env: source env/bin/activate

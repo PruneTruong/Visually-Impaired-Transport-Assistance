@@ -1,60 +1,60 @@
 item {
-  name: "/m/01g317"
+  name: "person"
   id: 1
   display_name: "person"
 }
 item {
-  name: "/m/0199g"
+  name: "bicycle"
   id: 2
   display_name: "bicycle"
 }
 item {
-  name: "/m/0k4j"
+  name: "car"
   id: 3
   display_name: "car"
 }
 item {
-  name: "/m/04_sv"
+  name: "motorcycle"
   id: 4
   display_name: "motorcycle"
 }
 item {
-  name: "/m/05czz6l"
+  name: "airplane"
   id: 5
   display_name: "airplane"
 }
 item {
-  name: "/m/01bjv"
+  name: "bus"
   id: 6
   display_name: "bus"
 }
 item {
-  name: "/m/07jdr"
+  name: "train"
   id: 7
   display_name: "train"
 }
 item {
-  name: "/m/07r04"
+  name: "truck"
   id: 8
   display_name: "truck"
 }
 item {
-  name: "/m/019jd"
+  name: "boat"
   id: 9
   display_name: "boat"
 }
 item {
-  name: "/m/015qff"
+  name: "traffic light"
   id: 10
   display_name: "traffic light"
 }
 item {
-  name: "/m/01pns0"
+  name: "fire hydrant"
   id: 11
   display_name: "fire hydrant"
 }
 item {
-  name: "/m/02pv19"
+  name: "stop sign"
   id: 13
   display_name: "stop sign"
 }

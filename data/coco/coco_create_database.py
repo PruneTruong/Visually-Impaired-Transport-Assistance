@@ -11,8 +11,9 @@ in the dataDir.
 
 
 tolaunch
-python coco_create_database.py --path_coco_database 
-'/Users/prunetruong/Desktop/Blind_project/Visually-Impaired-Transport-Assistance/data/coco' 
+python coco_create_database.py --path_coco_annotation 
+'/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/coco/annotations'
+--path_coco_images '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/mixed/images'
 --step_val_train_test train 
 --path_text_file '/Users/prunetruong/Desktop/Blind_project/Visually-Impaired-Transport-Assistance/data/coco/category_classes_coco.txt'
 
@@ -36,6 +37,7 @@ def get_parameters(text):
     label=[]
     label_id=[]
     number=[]
+    label=[]
     cats = coco.loadCats(coco.getCatIds())
     nms=[cat['name'] for cat in cats]
     for x in open('{}'.format(text)).readlines():
@@ -46,7 +48,7 @@ def get_parameters(text):
         label_id.append(row[1])
         number.append(row[2])
 
-    return(label, label_id, number)
+    return(label, label_id, number, label)
 
 
 def display_max_number(category):
@@ -57,7 +59,7 @@ def display_max_number(category):
     nbr_img=int(nbr_img)
     return nbr_img
 
-def create_categorie(category,label, label_id, number, path, step):
+def create_categorie(category,label, label_id, number, path_annotations, path_image_base, step):
     '''input: category= name of the category of object to download and put in the database
               directory= where to create the database
               This function creates a folder named like the category 
@@ -67,8 +69,7 @@ def create_categorie(category,label, label_id, number, path, step):
               corresponding label, height, width and bounding box dimensions of 
               the category object.
               '''
-    path_image='{}/images/dataset_{}'.format(path, step)
-    path_annotations='{}/annotations'.format(path)
+    path_image='{}/dataset_{}'.format(path_image_base, step)
     print('creating category {}...'.format(category))
     max_number=display_max_number(category)
     if (int(number)>max_number):
@@ -162,40 +163,35 @@ Also depending on train or val need to change the directory and first line
 
 '''
 parser = argparse.ArgumentParser()
-parser.add_argument('--path_coco_database', dest='path', required=True)
+parser.add_argument('--path_coco_annotation', dest='path_annotation', required=True)
+parser.add_argument('--path_coco_images', dest='path_images', required=True)
 parser.add_argument('--step_val_train_test', dest='step', required=True)
 parser.add_argument('--path_text_file', dest='fichier_text', required=True)
 
 if __name__ == '__main__':
 
     args = parser.parse_args()
-    path= args.path
+    path_annotation= args.path_annotation
+    path_images= args.path_images
     step = args.step
     fichier_text = args.fichier_text
 
 
     '''in the dataDir directory is located the "annotations" file containing json file/info on images'''
     dataType='{}2017'.format(step)
-    annFile='{}/annotations/instances_{}.json'.format(path,dataType)
+    annFile='{}/instances_{}.json'.format(path_annotation,dataType)
     coco=coco.COCO(annFile)
-    #COCO is a class from coco
-    
-    #categories=['bus', 'train', 'car', 'truck']
-    #labels= ['bus', 'train', 'car', 'truck']
-    #label_id=[0, 1, 2, 3]
-    #numbers=[4000, 4000, 2000, 1000]
-    
 
-    labels, label_id, numbers=get_parameters('{}'.format(fichier_text))
+    labels, label_id, numbers, label=get_parameters('{}'.format(fichier_text))
     categories=labels
     #is no number is given, the default will be all the images in the database
     #a=display_max_number(categories)
-    directory_annotations='{}/annotations'.format(path)
+
     for i,j,label_ids, number in zip(categories, labels, label_id, numbers): 
-        create_categorie(i, j, label_ids, number, path, step)
+        create_categorie(i, j, label_ids, number, path_annotation, path_images, step)
         print(number)
     
-    merge_csv(directory_annotations, 'label_{}'.format(step), step)
+    merge_csv(path_annotation, 'label_{}'.format(step), step)
 
 
 

@@ -4,14 +4,15 @@ import os
 import csv
 from object_detection.dataset_tools.create_coco_tf_record import _create_tf_record_from_coco_annotations
 from object_detection.utils import dataset_util
-#tfrecord_test used with github program, 14images with our own
-#"/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/coco/tfrecord_test_2/val.record"
+
+
+
 sample_config = {
-    'img_dir': '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/mixed/images/dataset_train',
-    'annotations_dir': '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/coco/annotations',
-    'output_dir': '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/coco/tfrecord',
-    'output_file_name': 'train',
-    'file_list_to_include': ['label_train.csv']
+    'img_dir': '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/mixed/images/dataset_val',
+    'annotations_dir': '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/mixed',
+    'output_dir': '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/mixed/tfrecord',
+    'output_file_name': 'val',
+    'file_list_to_include': ['label_val.csv']
     }
 
 def dataset2TFRecord(annotations_file, image_dir, output_dir,

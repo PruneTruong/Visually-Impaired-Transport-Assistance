@@ -3,34 +3,12 @@
 """
 @author: prunetruong
 
-
 to launch:
 python openV4_create_database.py
 --path_openV4_annotation '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/openV4/annotations'
---path_openV4_images '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/mixed/images'
+--path_openV4_images '/Users/prunetruong/Desktop/Blind_project/Visually-Impaired-Transport-Assistance/data/mixed/images/'
 --step_val_train_test val
 --path_text_file '/Users/prunetruong/Desktop/Blind_project/Visually-Impaired-Transport-Assistance/data/openV4/category_classes_openV4.txt'
-
-
-# downloads and extracts the openimages bounding box annotations and image path files
-cd /Users/prunetruong/Desktop/Blind_project/dataset/openV4/
-mkdir data
-wget http://storage.googleapis.com/openimages/2017_07/images_2017_07.tar.gz
-tar -xf images_2017_07.tar.gz
-mv 2017_07 data/images
-rm images_2017_07.tar.gz
-
-wget http://storage.googleapis.com/openimages/2017_07/annotations_human_bbox_2017_07.tar.gz
-tar -xf annotations_human_bbox_2017_07.tar.gz
-mv 2017_07 data/bbox_annotations
-rm annotations_human_bbox_2017_07.tar.gz
-
-wget http://storage.googleapis.com/openimages/2017_07/classes_2017_07.tar.gz
-tar -xf classes_2017_07.tar.gz
-mv 2017_07 data/classes
-rm classes_2017_07.tar.gz
-https://blog.algorithmia.com/deep-dive-into-object-detection-with-open-images-using-tensorflow/
-
 
 """
 
@@ -40,6 +18,9 @@ import urllib.request
 from PIL import Image
 import argparse
 import sys
+import warnings
+import shutil        
+import base64
 
 def make_json_file(text, categories_path):
     '''from the Text file containing the informations on the categories we want to 
@@ -104,8 +85,8 @@ def format_annotations(annotation_path, trainable_classes, categories):
                     #here we exclude the name of images that appear several times (the ones that have several annotations)
                     ids.append(row[0])
 
-    print('there are {} images of {}'.format(len(ids), ' '.join(trainable_classes)))
-    print('there are {} annotations'.format(len(annotations_bbx)))
+    print('there are {} images of {} available in openV4 dataset'.format(len(ids), ' '.join(categories)))
+    print('there are {} corresponding annotations'.format(len(annotations_bbx)))
 
     return annotations_bbx, ids
 
@@ -113,11 +94,19 @@ def list_image_to_download(path_to_download, ids):
     '''check if there are already images from the ids list that are downloaded. 
     Otherwise, lists the image_id that need to be downloaded'''
     
+    #l=0
     image_to_download=[]
     for name in ids:
+        #if os.path.exists('{}/{}.jpg'.format(path_to_download, name)):
+            #with open('{}/{}.jpg'.format(path_to_download, name), "rb") as image_file:
+                #encoded_string = base64.b64encode(image_file.read())
+                #if not encoded_string.endswith(b'/9k='):
+                    #l+=1
+                    #print(name)
+                    #shutil.move('{}/{}.jpg'.format(path_to_download, name), '/Users/prunetruong/Desktop/corrupted_file/')
         if not os.path.exists('{}/{}.jpg'.format(path_to_download, name)):
             image_to_download.append(name)
-    print(image_to_download)
+    #print(l)
     return image_to_download
 
 def format_image_index(images_path, ids):
@@ -133,18 +122,24 @@ def format_image_index(images_path, ids):
         
         reader = csv.reader(f)
         dataset = list(reader)
-        print('ok')
+        print('we went through the list of images in the database, now finding the url')
         i=0
+        l=0
         for row in dataset:
-            image = {'id': row[0], 'url': row[2]}    
+            image = {'id': row[0], 'url': row[2]}
             if image['id'] in ids:
                 images.append(image)
+                print(image['url'])
                 i+=1
                 if (i%1000==0):
                     print('found {} images'.format(i))
+                if not image['url'].endswith('.jpg'): 
+                    l+=1
+                    print(image['url'])
                 
-        
+    print('there are {} images that do not end with .jpg that we need to download'.format(l))
     print('we have {} images to download'.format(len(images)))
+    
     return images
 
 def download_images(path_to_download, list_images, number): 
@@ -162,10 +157,30 @@ def download_images(path_to_download, list_images, number):
         except:
             print('error downloading {}.jpg: skipping'.format(file_name))
     print('end of download')
-    
-    
+
+def downsampling_images(path_source_images, path_destination_images, desired_width):
+    print('we are downsampling the images present in {}'.format('path_source_images'))
+    i=0
+    width = desired_width
+    for file in os.listdir('{}'.format(path_source_images)):
+        if file.endswith('.jpg'):
+            if not os.path.exists('{}/{}'.format(path_destination_images, file)):
+                img = Image.open('{}/{}.jpg'.format( path_source_images, file.strip('.jpg') ))
+                width_rel= (width/float(img.size[0]))
+                height = int((float(img.size[1])*float(width_rel)))
+                try: 
+                    img = img.resize((width, height), Image.ANTIALIAS) 
+                    img.save('{}/{}'.format(path_destination_images,file))
+                    i+=1
+                    os.remove('{}/{}.jpg'.format(path_source_images, file))
+                except: 
+                    print('could not downsampled image {}'.format(file))
+    print('downsampled {} images'.format(i))
+        
 def create_csv(name_csv, directory_annotation, directory_image, annotations_bbx, step):
-    
+    warnings.filterwarnings('error')
+    todelete=[]
+    i=0
     if os.path.exists('{}/{}.csv'.format(directory_annotation, name_csv)):
         os.remove('{}/{}.csv'.format(directory_annotation, name_csv))
     print('creating a csv file ...')
@@ -176,13 +191,21 @@ def create_csv(name_csv, directory_annotation, directory_image, annotations_bbx,
         for image in annotations_bbx: 
             image_id=image['id']
             if os.path.exists('{}/{}.jpg'.format(directory_image, image_id)):
-                Image_to_describe = Image.open('{}/{}.jpg'.format(directory_image, image_id))
-                width, height = Image_to_describe.size
-                print('{} image has a size of {} height and {} width'.format(image_id, width, height))
-                writer.writerow([image_id, image['label'], image['label_id'], height, width, image['xmin'],image['ymin'],image['xmax'],
+                try: 
+                    
+                    Image_to_describe = Image.open('{}/{}.jpg'.format(directory_image, image_id))
+                    width, height = Image_to_describe.size
+                    i+=1
+                #print('{} image has a size of {} height and {} width'.format(image_id, width, height))
+                    writer.writerow([image_id, image['label'], image['label_id'], height, width, image['xmin'],image['ymin'],image['xmax'],
                              image['ymax']])
-        print('csv file created in {}'.format(directory_annotation))
-    
+                except Warning: 
+                    print('image not written in csv')
+                    todelete.append(image_id)
+        print('csv file created in {} with {} annotations'.format(directory_annotation, i))
+    for name in todelete:
+        os.remove('{}/{}.jpg'.format(directory_image, name))
+        print('{} deleted'.format(name))
 
 
 parser = argparse.ArgumentParser()
@@ -203,20 +226,25 @@ if __name__ == '__main__':
     images_annotation_path='{}/images/{}/images.csv'.format(path_annotation,step)
     classes_description_path='{}/classes/class-descriptions.csv'.format(path_annotation)
 
-
+    path_intermediary='{}/dataset_{}_big_images'.format(path_images, step)
     path_to_download='{}/dataset_{}'.format(path_images,step)
     
-    categories_information, list_classes=make_json_file(fichier_text, classes_description_path )
+    categories_information, list_classes=make_json_file(fichier_text, classes_description_path)
     annotations, list_image_ids = format_annotations(bbox_annotation_path, list_classes, categories_information)
+    desired_width = 600
     create_csv('label_{}'.format(step), path_annotation, path_to_download, annotations, step)
-
+    #if we want to download images, remove create_csv above and remove ''' below
+    
 '''
     list_image_id_to_download=list_image_to_download(path_to_download, list_image_ids)
-    print(list_image_id_to_download)
-
-    if list_image_id_to_download: 
+    if list_image_id_to_download:
+        if not os.path.exists('{}'.format(path_intermediary)):
+            os.makedirs('{}'.format(path_intermediary))
         list_images_url=format_image_index(images_annotation_path, list_image_id_to_download)
-        download_images(path_to_download, list_images_url, len(list_images_url))
-
-
+        download_images(path_intermediary, list_images_url, len(list_images_url))
+        downsampling_images(path_intermediary, path_to_download, desired_width)
+    create_csv('label_{}'.format(step), path_annotation, path_to_download, annotations, step)
 '''
+    
+
+

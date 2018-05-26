@@ -4,15 +4,23 @@ import os
 import csv
 from object_detection.dataset_tools.create_coco_tf_record import _create_tf_record_from_coco_annotations
 from object_detection.utils import dataset_util
+#tfrecord_test used with github program, 14images with our own
+#"/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/coco/tfrecord_test_2/val.record"
+sample_config_prune = {
+    'img_dir': '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/mixed/images/dataset_train',
+    'annotations_dir': '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/coco/annotations',
+    'output_dir': '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/coco/tfrecord',
+    'output_file_name': 'train',
+    'file_list_to_include': ['label_train.csv']
+    }
 
+sample_config_nathan = {
+    'img_dir': '/home/nathan/Visually-Impaired-Transport-Assistance/data/coco/images/dataset_val',
+    'annotations_dir':'/home/nathan/Visually-Impaired-Transport-Assistance/data/coco/annotations',
+    'output_dir': '/home/nathan/Visually-Impaired-Transport-Assistance/data/coco/tfrecord_beta',
+    'output_file_name': 'eval',
+    'file_list_to_include': ['label.csv']
 
-
-sample_config = {
-    'img_dir': '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/mixed/images/dataset_val',
-    'annotations_dir': '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/mixed',
-    'output_dir': '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/mixed/tfrecord',
-    'output_file_name': 'val',
-    'file_list_to_include': ['label_val.csv']
     }
 
 def dataset2TFRecord(annotations_file, image_dir, output_dir,
@@ -147,6 +155,55 @@ def main(config):
     create_tf_record(annotations, writer, config)
 
 
-main(sample_config)
+main(sample_config_nathan)
 #if __name__ == '__main__':
 #    tf.app.run()
+
+
+def create_cat_tf_example(encoded_cat_image_data):
+    """Creates a tf.Example proto from sample cat image.
+
+    Args:
+    encoded_cat_image_data: The jpg encoded data of the cat image.
+
+    Returns:
+    example: The created tf.Example.
+  """
+
+    height = 1032
+    width = 1200
+    filename = b'example_cat.jpg'
+    image_format = b'jpg'
+
+    xmins = [322.0 / 1200.0]
+    xmaxs = [1062.0 / 1200.0]
+    ymins = [174.0 / 1032.0]
+    ymaxs = [761.0 / 1032.0]
+    classes_text = [b'Cat']
+    classes = [1]
+
+    tf_example = tf.train.Example(features=tf.train.Features(feature={
+      'image/height': dataset_util.int64_feature(height),
+      'image/width': dataset_util.int64_feature(width),
+      'image/filename': dataset_util.bytes_feature(filename),
+      'image/source_id': dataset_util.bytes_feature(filename),
+      'image/encoded': dataset_util.bytes_feature(encoded_cat_image_data),
+      'image/format': dataset_util.bytes_feature(image_format),
+      'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
+      'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
+      'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
+      'image/object/bbox/ymax': dataset_util.float_list_feature(ymaxs),
+      'image/object/class/text': dataset_util.bytes_list_feature(classes_text),
+      'image/object/class/label': dataset_util.int64_list_feature(classes),
+    }))
+    return tf_example
+
+def runnow():
+    writer = tf.python_io.TFRecordWriter('/home/nathan/Desktop/test_record.record')
+    with open('/home/nathan/Desktop/example_cat.jpg', 'rb') as img:
+        tf_example = create_cat_tf_example(img.read())
+    writer.write(tf_example.SerializeToString())
+
+    writer.close()
+
+#runnow()

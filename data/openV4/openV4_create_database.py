@@ -4,10 +4,9 @@
 @author: prunetruong
 
 to launch:
-python openV4_create_database.py
---path_openV4_annotation '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/openV4/annotations'
---path_openV4_images '/Users/prunetruong/Desktop/Blind_project/Visually-Impaired-Transport-Assistance/data/mixed/images/'
---step_val_train_test val
+python openV4_create_database.py --path_openV4_annotation '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/openV4/annotations' 
+--path_openV4_images '/Volumes/PRUNE/Visually-Impaired-Transport-Assistance/mixed/images/'
+--step_val_train_test train
 --path_text_file '/Users/prunetruong/Desktop/Blind_project/Visually-Impaired-Transport-Assistance/data/openV4/category_classes_openV4.txt'
 
 """
@@ -85,7 +84,7 @@ def format_annotations(annotation_path, trainable_classes, categories):
                     #here we exclude the name of images that appear several times (the ones that have several annotations)
                     ids.append(row[0])
 
-    print('there are {} images of {} available in openV4 dataset'.format(len(ids), ' '.join(categories)))
+    print('there are {} images of {} available in openV4 dataset'.format(len(ids), ' '.join(trainable_classes)))
     print('there are {} corresponding annotations'.format(len(annotations_bbx)))
 
     return annotations_bbx, ids
@@ -227,7 +226,7 @@ if __name__ == '__main__':
     classes_description_path='{}/classes/class-descriptions.csv'.format(path_annotation)
 
     path_intermediary='{}/dataset_{}_big_images'.format(path_images, step)
-    path_to_download='{}/dataset_{}'.format(path_images,step)
+    path_to_download='{}/dataset_{}_down_sampled'.format(path_images,step)
     
     categories_information, list_classes=make_json_file(fichier_text, classes_description_path)
     annotations, list_image_ids = format_annotations(bbox_annotation_path, list_classes, categories_information)

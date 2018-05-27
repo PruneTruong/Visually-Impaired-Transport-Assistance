@@ -59,7 +59,7 @@ item {
   display_name: "stop sign"
 }
 item {
-  name: "/m/015qbp"
+  name:  "parking meter"
   id: 14
   display_name: "parking meter"
 }
